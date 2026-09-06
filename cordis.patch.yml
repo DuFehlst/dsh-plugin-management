@@ -1,0 +1,7 @@
+# dsh-plugin-management：插件驾驶舱。盘点 + 设置面板启停（不卸载、核心锁死）。
+- insert:
+    - id: dsh-plugin-management
+      name: dsh-plugin-management
+      config:
+        # 变更备份目录（可覆盖）；默认 $DSH_HOME/dsh-plugin-management/backups
+        backupDir: !!js dshHomePath('dsh-plugin-management/backups')
