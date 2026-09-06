@@ -22,14 +22,27 @@ const CAT_LABEL: Record<string, string> = {
   other: '其他',
 }
 
+interface ReviewState {
+  periodDays: number
+  lastReviewAt: string | null
+  daysSince: number | null
+  due: boolean
+  candidates: string[]
+}
+
 function fetchInventory(): Promise<Item[]> {
   return fetch('/plugin-management/api/inventory')
     .then(r => r.json())
     .then(d => d.items ?? [])
 }
 
+function fetchReview(): Promise<ReviewState> {
+  return fetch('/plugin-management/api/review').then(r => r.json())
+}
+
 export function PluginManagementView({ close }: { close?: () => void }) {
   const [items, setItems] = useState<Item[]>([])
+  const [review, setReview] = useState<ReviewState | null>(null)
   const [loading, setLoading] = useState<'loading' | 'ready' | 'error'>('loading')
   const [msg, setMsg] = useState('')
 
@@ -40,7 +53,21 @@ export function PluginManagementView({ close }: { close?: () => void }) {
       .catch(() => setLoading('error'))
   }
 
-  useEffect(() => { reload() }, [])
+  useEffect(() => {
+    reload()
+    fetchReview().then(setReview).catch(() => {})
+  }, [])
+
+  const markReviewed = async () => {
+    try {
+      await fetch('/plugin-management/api/review', { method: 'POST' })
+      const d = await fetchReview()
+      setReview(d)
+      setMsg('已记录回顾，14 天后到期再提醒。')
+    } catch (e) {
+      setMsg(`回顾确认失败：${String(e)}`)
+    }
+  }
 
   const toggle = async (name: string, enabled: boolean) => {
     try {
@@ -73,6 +100,21 @@ export function PluginManagementView({ close }: { close?: () => void }) {
     <div style={{ padding: 16 }}>
       <h3>插件管理 · {items.length} 个插件</h3>
       {msg && <div style={{ color: '#b45309', marginBottom: 8 }}>{msg}</div>}
+      {review?.due && (
+        <div style={{ background: '#fef3c7', border: '1px solid #f59e0b', borderRadius: 8, padding: '10px 12px', marginBottom: 12 }}>
+          <div style={{ fontWeight: 600 }}>按需插件停用回顾提醒</div>
+          <div style={{ fontSize: 12, color: '#6b7280', margin: '4px 0' }}>
+            {review.daysSince == null ? '尚未做过回顾。' : `已 ${review.daysSince} 天未回顾（周期 ${review.periodDays} 天）。`}
+            请逐项确认以下插件停用 / 保留：{review.candidates.join(' / ')}
+          </div>
+          <button onClick={markReviewed} style={{ marginTop: 4 }}>已回顾（下次到期再提醒）</button>
+        </div>
+      )}
+      {review && !review.due && (
+        <div style={{ color: 'rgba(0,0,0,.35)', fontSize: 12, marginBottom: 8 }}>
+          按需插件回顾：{review.daysSince ?? 0} 天前已做，到期后会再提醒。
+        </div>
+      )}
       {groups.map(([cat, list]) => (
         <div key={cat} style={{ marginBottom: 20 }}>
           <h4 style={{ margin: '8px 0' }}>{CAT_LABEL[cat] ?? cat}</h4>

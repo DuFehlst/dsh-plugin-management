@@ -3,6 +3,7 @@ import { join, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { buildInventory } from './inventory.js'
 import { applyToggle, scanPatchRows } from './patch-ops.js'
+import { buildReviewState, readReviewState, writeReviewState } from './review.js'
 
 export const name = 'dsh-plugin-management'
 export const inject = ['webServer']
@@ -56,6 +57,7 @@ export function apply(ctx, config) {
   const profileDir = toPath(ctx.baseUrl)
   const pkgInfo = pkgInfoFactory(profileDir)
   const backupDir = config?.backupDir ?? join(process.env.DSH_HOME ?? dirname(profileDir), 'dsh-plugin-management', 'backups')
+  const reviewFile = config?.reviewFile ?? join(process.env.DSH_HOME ?? dirname(profileDir), 'dsh-plugin-management', 'review-state.json')
 
   const api = async (req, res) => {
     try {
@@ -79,6 +81,17 @@ export function apply(ctx, config) {
           pkgInfo,
         })
         return sendJson(res, 200, { ...result, restartRequired: true })
+      }
+
+      if (path === '/plugin-management/api/review' && req.method === 'GET') {
+        const state = await readReviewState(reviewFile)
+        return sendJson(res, 200, buildReviewState({ lastReviewAt: state?.lastReviewAt ?? null }))
+      }
+
+      if (path === '/plugin-management/api/review' && req.method === 'POST') {
+        const lastReviewAt = new Date().toISOString()
+        await writeReviewState(reviewFile, lastReviewAt)
+        return sendJson(res, 200, buildReviewState({ lastReviewAt }))
       }
 
       return sendJson(res, 404, { error: 'not-found' })

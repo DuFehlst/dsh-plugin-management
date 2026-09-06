@@ -1,7 +1,7 @@
 {
   "name": "dsh-plugin-management",
-  "version": "0.1.0",
-  "description": "DSH 插件驾驶舱：分类盘点 web profile 插件，设置面板里逐项启用/停用（不卸载），核心能力锁死，变更自带备份与校验。",
+  "version": "0.2.0",
+  "description": "DSH 插件驾驶舱：分类盘点 web profile 插件，设置面板里逐项启用/停用（不卸载），核心能力锁死，变更自带备份与校验；含按需插件停用回顾提醒（14 天周期）。",
   "type": "module",
   "main": "src/host/index.js",
   "exports": {
