@@ -99,15 +99,39 @@ export function PluginManagementView({ close }: { close?: () => void }) {
   return (
     <div style={{ padding: 16 }}>
       <h3>插件管理 · {items.length} 个插件</h3>
-      {msg && <div style={{ color: '#b45309', marginBottom: 8 }}>{msg}</div>}
+      {msg && <div style={{ color: 'var(--text-3, #7a7a7a)', marginBottom: 8 }}>{msg}</div>}
       {review?.due && (
-        <div style={{ background: '#fef3c7', border: '1px solid #f59e0b', borderRadius: 8, padding: '10px 12px', marginBottom: 12 }}>
-          <div style={{ fontWeight: 600 }}>按需插件停用回顾提醒</div>
-          <div style={{ fontSize: 12, color: '#6b7280', margin: '4px 0' }}>
-            {review.daysSince == null ? '尚未做过回顾。' : `已 ${review.daysSince} 天未回顾（周期 ${review.periodDays} 天）。`}
-            请逐项确认以下插件停用 / 保留：{review.candidates.join(' / ')}
+        <div style={{ background: 'var(--card-2, #f5f5f7)', border: '1px solid var(--border, #e0e0e0)', borderRadius: 8, padding: '10px 12px', marginBottom: 12 }}>
+          <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true" style={{ flexShrink: 0, marginTop: 2, color: 'var(--text-3, #7a7a7a)' }}>
+              <path d="M12 6.25C12.4142 6.25 12.75 6.58579 12.75 7V13C12.75 13.4142 12.4142 13.75 12 13.75C11.5858 13.75 11.25 13.4142 11.25 13V7C11.25 6.58579 11.5858 6.25 12 6.25Z" fill="currentColor" />
+              <path d="M12 17C12.5523 17 13 16.5523 13 16C13 15.4477 12.5523 15 12 15C11.4477 15 11 15.4477 11 16C11 16.5523 11.4477 17 12 17Z" fill="currentColor" />
+              <path fillRule="evenodd" clipRule="evenodd" d="M1.25 12C1.25 6.06294 6.06294 1.25 12 1.25C17.9371 1.25 22.75 6.06294 22.75 12C22.75 17.9371 17.9371 22.75 12 22.75C6.06294 22.75 1.25 17.9371 1.25 12ZM12 2.75C6.89137 2.75 2.75 6.89137 2.75 12C2.75 17.1086 6.89137 21.25 12 21.25C17.1086 21.25 21.25 17.1086 21.25 12C21.25 6.89137 17.1086 2.75 12 2.75Z" fill="currentColor" />
+            </svg>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontWeight: 600 }}>按需插件停用回顾提醒</div>
+              <div style={{ fontSize: 12, color: '#6b7280', margin: '4px 0' }}>
+                {review.daysSince == null ? '尚未做过回顾。' : `已 ${review.daysSince} 天未回顾（周期 ${review.periodDays} 天）。`}
+                请逐项确认以下插件停用 / 保留：{review.candidates.join(' / ')}
+              </div>
+              <button
+                onClick={markReviewed}
+                style={{
+                  marginTop: 4,
+                  background: 'var(--accent, #0066cc)',
+                  color: '#fff',
+                  border: 'none',
+                  borderRadius: 999,
+                  padding: '6px 16px',
+                  fontSize: 13,
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                }}
+              >
+                已回顾（下次到期再提醒）
+              </button>
+            </div>
           </div>
-          <button onClick={markReviewed} style={{ marginTop: 4 }}>已回顾（下次到期再提醒）</button>
         </div>
       )}
       {review && !review.due && (
@@ -123,7 +147,14 @@ export function PluginManagementView({ close }: { close?: () => void }) {
               <div style={{ flex: 1 }}>
                 <div style={{ fontWeight: 600 }}>
                   {it.name} <span style={{ color: 'rgba(0,0,0,.35)', fontSize: 11 }}>{it.loadKind}</span>
-                  {it.isCore && <span style={{ color: '#b45309', fontSize: 12 }}>核心</span>}
+                  {it.isCore && (
+                    <span style={{ color: 'var(--text-3, #7a7a7a)', fontSize: 12, display: 'inline-flex', alignItems: 'center', gap: 3, marginLeft: 6 }}>
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true" style={{ flexShrink: 0 }}>
+                        <path fillRule="evenodd" clipRule="evenodd" d="M5.25 9.30277V8C5.25 4.27208 8.27208 1.25 12 1.25C15.7279 1.25 18.75 4.27208 18.75 8V9.30277C18.9768 9.31872 19.1906 9.33948 19.3918 9.36652C20.2919 9.48754 21.0497 9.74643 21.6517 10.3483C22.2536 10.9503 22.5125 11.7081 22.6335 12.6082C22.75 13.4752 22.75 14.5775 22.75 15.9451V16.0549C22.75 17.4225 22.75 18.5248 22.6335 19.3918C22.5125 20.2919 22.2536 21.0497 21.6517 21.6516C21.0497 22.2536 20.2919 22.5125 19.3918 22.6335C18.5248 22.75 17.4225 22.75 16.0549 22.75H7.94513C6.57754 22.75 5.47522 22.75 4.60825 22.6335C3.70814 22.5125 2.95027 22.2536 2.34835 21.6516C1.74643 21.0497 1.48754 20.2919 1.36652 19.3918C1.24996 18.5248 1.24998 17.4225 1.25 16.0549V15.9451C1.24998 14.5775 1.24996 13.4752 1.36652 12.6082C1.48754 11.7081 1.74643 10.9503 2.34835 10.3483C2.95027 9.74643 3.70814 9.48754 4.60825 9.36652C4.80938 9.33948 5.02317 9.31872 5.25 9.30277ZM6.75 8C6.75 5.10051 9.10051 2.75 12 2.75C14.8995 2.75 17.25 5.10051 17.25 8V9.25344C16.8765 9.24999 16.4784 9.24999 16.0549 9.25H7.94513C7.52161 9.24999 7.12353 9.24999 6.75 9.25344V8ZM3.40901 11.409C3.68577 11.1322 4.07435 10.9518 4.80812 10.8531C5.56347 10.7516 6.56459 10.75 8 10.75H16C17.4354 10.75 18.4365 10.7516 19.1919 10.8531C19.9257 10.9518 20.3142 11.1322 20.591 11.409C20.8678 11.6858 21.0482 12.0743 21.1469 12.8081C21.2484 13.5635 21.25 14.5646 21.25 16C21.25 17.4354 21.2484 18.4365 21.1469 19.1919C21.0482 19.9257 20.8678 20.3142 20.591 20.591C20.3142 20.8678 19.9257 21.0482 19.1919 21.1469C18.4365 21.2484 17.4354 21.25 16 21.25H8C6.56459 21.25 5.56347 21.2484 4.80812 21.1469C4.07435 21.0482 3.68577 20.8678 3.40901 20.591C3.13225 20.3142 2.9518 19.9257 2.85315 19.1919C2.75159 18.4365 2.75 17.4354 2.75 16C2.75 14.5646 2.75159 13.5635 2.85315 12.8081C2.9518 12.0743 3.13225 11.6858 3.40901 11.409Z" fill="currentColor" />
+                      </svg>
+                      核心
+                    </span>
+                  )}
                 </div>
                 <div style={{ color: '#6b7280', fontSize: 12 }}>{it.description || it.spec || ''}</div>
               </div>
