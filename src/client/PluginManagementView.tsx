@@ -40,6 +40,25 @@ function fetchReview(): Promise<ReviewState> {
   return fetch('/plugin-management/api/review').then(r => r.json())
 }
 
+// 启停失败的文案：新失败态（写前校验/写盘/写后复核）必须让用户知道 profile 有没有被动过
+const FAIL_COPY: Record<string, string> = {
+  locked: '核心/基础插件不可停用',
+  'no-profile': '读不到 profile 的 package.json，未做任何改动',
+  'unknown-loadkind': '无法判断该插件的加载形态，未做任何改动',
+  'not-found-patch-row': '在 cordis.patch.yml 里找不到该插件行，未做任何改动',
+  'validate-failed': '改动未通过校验，profile 未被改动',
+  'verify-failed': '写后复核不通过，已回滚到改动前的 profile',
+  'write-failed': '写盘失败，profile 保持原样',
+}
+
+function failCopy(d: { reason?: string; rolledBack?: boolean; detail?: string }): string {
+  const base = FAIL_COPY[d.reason ?? ''] ?? `变更失败：${d.reason ?? 'unknown'}`
+  if (d.reason === 'write-failed' && d.rolledBack === false) {
+    return `${base}（回滚未成功，请手动用 backups 目录恢复）`
+  }
+  return base
+}
+
 export function PluginManagementView({ close }: { close?: () => void }) {
   const [items, setItems] = useState<Item[]>([])
   const [review, setReview] = useState<ReviewState | null>(null)
@@ -78,7 +97,7 @@ export function PluginManagementView({ close }: { close?: () => void }) {
       })
       const d = await r.json()
       if (!d.ok) {
-        setMsg(d.reason === 'locked' ? '核心/基础插件不可停用' : `变更失败：${d.reason ?? 'unknown'}`)
+        setMsg(failCopy(d))
         return
       }
       setMsg(`已${enabled ? '启用' : '停用'} ${name} —— 需重启 dsh web 生效；变更已备份。`)
