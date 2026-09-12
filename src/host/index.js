@@ -4,9 +4,11 @@ import { fileURLToPath } from 'node:url'
 import { buildInventory } from './inventory.js'
 import { applyToggle, scanPatchRows } from './patch-ops.js'
 import { buildReviewState, readReviewState, writeReviewState } from './review.js'
+import { registerPluginCommand } from './commands.js'
 
 export const name = 'dsh-plugin-management'
-export const inject = ['webServer']
+// commands = 内核 @deepseek-ai/dsh-commands 提供的人类命令注册表（随 dsh-base 加载）
+export const inject = ['webServer', 'commands']
 
 // ctx.baseUrl 可能是 file:/// URL 或路径，统一转成本地文件路径
 export function toPath(u) {
@@ -101,4 +103,7 @@ export function apply(ctx, config) {
   }
 
   ctx.effect(() => ctx.webServer.register({ kind: 'prefix', path: '/plugin-management/api', handler: api }), 'pm-api')
+
+  // 人类命令：/plugin list|enable|disable（与设置面板同一条写侧安全链）
+  registerPluginCommand(ctx, { profileDir, backupDir, pkgInfo })
 }

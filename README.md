@@ -13,9 +13,12 @@
 - **变更安全链（0.3.0，2026-09-12 硬化）**：写前校验（JSON 可解析 / bundles 合法 / 无 tab 缩进 / 目标效果可复核）→ **原子写**（同目录临时文件 + rename）→ **写后读回复核** → 不符即**回滚原文**。失败原因以人话回传（`validate-failed` / `write-failed` / `verify-failed`），并说明 profile 有没有被动过。
 - patch 行编辑已覆盖：引号 id、同一 id 出现在多个 insert 块（全部命中）、已有 `disabled: false` 改写而非追加重复键。
 - 变更后可用 `dsh --profile web --dump-config` 校验组合无错误（人工步骤；插件内的等价校验见上一条）。
+- **斜杠命令 `/plugin`（0.4.0）**：`/plugin` 或 `/plugin list` 输出分类清单（含启用态/加载形态/核心锁死），`/plugin list files` 按分类过滤，
+  `/plugin enable <名>` / `/plugin disable <名>` 直接走同一条写侧安全链（人与 agent 都能用；核心拒绝）。注册走内核 `@deepseek-ai/dsh-commands`。
 
 ## 变更记录
 
+- **0.4.0**（2026-09-12）— 新增 `/plugin` 斜杠命令（list / enable / disable），复用设置面板的写侧安全链；host `inject` 增加内核 `commands` 服务。测试 25/25。
 - **0.3.0**（2026-09-12）— #3 硬化：写前校验 + 原子写 + 写后复核 + 失败回滚；patch 行编辑修三个真实缺陷（引号 id、多 insert 块只改一处、`disabled: false` 时追加出重复键）；失败文案人话化。测试 19/19。
   - **兼容内核 0.1.5-rc.2**：`dsh.client.inject` 去掉已被内核移除的 `@deepseek-ai/dsh-client-runtime`、`@deepseek-ai/dsh-client-ui-slots`（保留 `dsh-client-connection` / `dsh-client-locale` / `dsh-client-ui-settings`）——不修则整站客户端插件加载失败（`Failed to load plugins`），界面起不来。
   - **改名消歧**：设置章节 `插件管理` → `插件启停`（en `Plugin toggles`），与内核自带的「插件」章节（只读清单 + 配置卡片）区分。

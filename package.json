@@ -1,7 +1,7 @@
 {
   "name": "dsh-plugin-management",
-  "version": "0.3.0",
-  "description": "DSH 插件驾驶舱：分类盘点 web profile 插件，设置面板里逐项启用/停用（不卸载），核心能力锁死；变更走写前校验+原子写+写后复核+失败回滚，自带备份与重启提示；含按需插件停用回顾提醒（14 天周期）。",
+  "version": "0.4.0",
+  "description": "DSH 插件驾驶舱：分类盘点 web profile 插件；设置面板逐项启用/停用（不卸载）+ /plugin 斜杠命令（list|enable|disable）；核心能力锁死；变更走写前校验+原子写+写后复核+失败回滚，自带备份与重启提示；含按需插件停用回顾提醒（14 天周期）。",
   "type": "module",
   "main": "src/host/index.js",
   "exports": {
@@ -21,7 +21,7 @@
     "LICENSE"
   ],
   "scripts": {
-    "build": "node --check src/host/index.js && node --check src/host/inventory.js && node --check src/host/patch-ops.js && npm run build:client",
+    "build": "node --check src/host/index.js && node --check src/host/inventory.js && node --check src/host/patch-ops.js && node --check src/host/commands.js && npm run build:client",
     "build:client": "tsdown",
     "test": "node --test test/*.test.js"
   },
