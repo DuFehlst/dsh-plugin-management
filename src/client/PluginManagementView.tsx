@@ -117,7 +117,7 @@ export function PluginManagementView({ close }: { close?: () => void }) {
 
   return (
     <div style={{ padding: 16 }}>
-      <h3>插件管理 · {items.length} 个插件</h3>
+      <h3>插件启停 · {items.length} 个插件</h3>
       {msg && <div style={{ color: 'var(--text-3, #7a7a7a)', marginBottom: 8 }}>{msg}</div>}
       {review?.due && (
         <div style={{ background: 'var(--card-2, #f5f5f7)', border: '1px solid var(--border, #e0e0e0)', borderRadius: 8, padding: '10px 12px', marginBottom: 12 }}>

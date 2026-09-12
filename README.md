@@ -17,6 +17,9 @@
 ## 变更记录
 
 - **0.3.0**（2026-09-12）— #3 硬化：写前校验 + 原子写 + 写后复核 + 失败回滚；patch 行编辑修三个真实缺陷（引号 id、多 insert 块只改一处、`disabled: false` 时追加出重复键）；失败文案人话化。测试 19/19。
+  - **兼容内核 0.1.5-rc.2**：`dsh.client.inject` 去掉已被内核移除的 `@deepseek-ai/dsh-client-runtime`、`@deepseek-ai/dsh-client-ui-slots`（保留 `dsh-client-connection` / `dsh-client-locale` / `dsh-client-ui-settings`）——不修则整站客户端插件加载失败（`Failed to load plugins`），界面起不来。
+  - **改名消歧**：设置章节 `插件管理` → `插件启停`（en `Plugin toggles`），与内核自带的「插件」章节（只读清单 + 配置卡片）区分。
+  - 真机走查证据：`工作产出\插件作用分析\e2e-panel-verification.md`（含截图）。
 - **0.2.0**（2026-09-06）— 按需插件停用回顾提醒（14 天周期，`/review` API + 面板提醒卡）。
 
 ## 插件分类总览（Mermaid）

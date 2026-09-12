@@ -11,8 +11,8 @@ export const inject = ['slots', 'locale']
 
 export function apply(ctx: ClientContext): void {
   ctx.effect(() => ctx.locale.register('pm', {
-    zh: { 'nav.label': '插件管理' },
-    en: { 'nav.label': 'Plugins' },
+    zh: { 'nav.label': '插件启停' },
+    en: { 'nav.label': 'Plugin toggles' },
   }), 'pm: locale')
 
   ctx.slots.inject('settings.section', () => ctx.slots.register({
