@@ -5,6 +5,7 @@ import { buildInventory } from './inventory.js'
 import { applyToggle, scanPatchRows } from './patch-ops.js'
 import { buildReviewState, readReviewState, writeReviewState } from './review.js'
 import { registerPluginCommand } from './commands.js'
+import { applyBatch, planCategory, planPreset, summarizeBatch } from './preset.js'
 
 export const name = 'dsh-plugin-management'
 // commands = 内核 @deepseek-ai/dsh-commands 提供的人类命令注册表（随 dsh-base 加载）
@@ -61,16 +62,20 @@ export function apply(ctx, config) {
   const backupDir = config?.backupDir ?? join(process.env.DSH_HOME ?? dirname(profileDir), 'dsh-plugin-management', 'backups')
   const reviewFile = config?.reviewFile ?? join(process.env.DSH_HOME ?? dirname(profileDir), 'dsh-plugin-management', 'review-state.json')
 
+  const currentInventory = async () => {
+    const pkg = JSON.parse(readFileSync(join(profileDir, 'package.json'), 'utf8'))
+    let patch = ''
+    try { patch = readFileSync(join(profileDir, 'cordis.patch.yml'), 'utf8') } catch { patch = '' }
+    const rows = scanPatchRows(patch)
+    return { items: buildInventory({ packageJson: pkg, patchRows: rows, pkgInfo }) }
+  }
+
   const api = async (req, res) => {
     try {
       const path = new URL(req.url ?? '/', 'http://x').pathname
 
       if (path === '/plugin-management/api/inventory' && req.method === 'GET') {
-        const pkg = JSON.parse(readFileSync(join(profileDir, 'package.json'), 'utf8'))
-        let patch = ''
-        try { patch = readFileSync(join(profileDir, 'cordis.patch.yml'), 'utf8') } catch { patch = '' }
-        const rows = scanPatchRows(patch)
-        const items = buildInventory({ packageJson: pkg, patchRows: rows, pkgInfo })
+        const { items } = await currentInventory()
         return sendJson(res, 200, { items })
       }
 
@@ -85,8 +90,27 @@ export function apply(ctx, config) {
         return sendJson(res, 200, { ...result, restartRequired: true })
       }
 
-      if (path === '/plugin-management/api/review' && req.method === 'GET') {
-        const state = await readReviewState(reviewFile)
+      if (path === '/plugin-management/api/preset' && req.method === 'POST') {
+        const body = JSON.parse(await readJsonBody(req))
+        const bundle = await currentInventory()
+        const { ops, reason } = planPreset(bundle.items, body.mode)
+        if (reason !== null) return sendJson(res, 400, { ok: false, error: reason })
+        const result = await applyBatch(profileDir, ops, { backupDir, pkgInfo })
+        return sendJson(res, 200, { ...result, mode: body.mode, summary: summarizeBatch(result), restartRequired: result.ok })
+      }
+
+      if (path === '/plugin-management/api/category' && req.method === 'POST') {
+        const body = JSON.parse(await readJsonBody(req))
+        const bundle = await currentInventory()
+        const { ops, reason } = planCategory(bundle.items, body.category, body.enabled)
+        if (reason !== null) return sendJson(res, 400, { ok: false, error: reason })
+        const result = await applyBatch(profileDir, ops, { backupDir, pkgInfo })
+        return sendJson(res, 200, {
+          ...result, category: body.category, summary: summarizeBatch(result), restartRequired: result.ok,
+        })
+      }
+
+      if (path === '/plugin-management/api/review' && req.method === 'GET') {        const state = await readReviewState(reviewFile)
         return sendJson(res, 200, buildReviewState({ lastReviewAt: state?.lastReviewAt ?? null }))
       }
 

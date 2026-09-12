@@ -107,6 +107,31 @@ export function PluginManagementView({ close }: { close?: () => void }) {
     }
   }
 
+  // 批量：一次计划、一次备份、逐个落盘、任一失败整体回滚（host 侧 applyBatch）
+  const batch = async (url: string, payload: Record<string, unknown>, label: string) => {
+    try {
+      const r = await fetch(url, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify(payload),
+      })
+      const d = await r.json()
+      if (d.error) {
+        setMsg(`${label}失败：${d.error}`)
+        return
+      }
+      setMsg(`${label}：${d.summary ?? ''}`)
+      reload()
+    } catch (e) {
+      setMsg(`${label}请求失败：${String(e)}`)
+    }
+  }
+
+  const applyPreset = (mode: 'lean' | 'full') =>
+    batch('/plugin-management/api/preset', { mode }, mode === 'lean' ? '精简模式' : '全量模式')
+  const applyCategory = (category: string, enabled: boolean) =>
+    batch('/plugin-management/api/category', { category, enabled }, `${enabled ? '启用' : '停用'}整组`)
+
   if (loading === 'loading') return <div style={{ padding: 16 }}>加载中…</div>
   if (loading === 'error') return <div style={{ padding: 16 }}>加载失败 <button onClick={reload}>重试</button></div>
 
@@ -158,9 +183,24 @@ export function PluginManagementView({ close }: { close?: () => void }) {
           按需插件回顾：{review.daysSince ?? 0} 天前已做，到期后会再提醒。
         </div>
       )}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', margin: '4px 0 14px' }}>
+        <span style={{ fontSize: 12, color: 'var(--text-3, #7a7a7a)' }}>批量方案：</span>
+        <button onClick={() => applyPreset('lean')} title="只留常用插件，按需项整组停用（不卸载）">精简模式</button>
+        <button onClick={() => applyPreset('full')} title="把清单里的用户插件全部启用">全量模式</button>
+        <span style={{ fontSize: 12, color: 'var(--text-3, #7a7a7a)' }}>批量改动任一失败会整体回滚</span>
+      </div>
       {groups.map(([cat, list]) => (
         <div key={cat} style={{ marginBottom: 20 }}>
-          <h4 style={{ margin: '8px 0' }}>{CAT_LABEL[cat] ?? cat}</h4>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <h4 style={{ margin: '8px 0' }}>{CAT_LABEL[cat] ?? cat}</h4>
+            <button
+              onClick={() => applyCategory(cat, list.some(it => !it.enabled && !it.isCore))}
+              style={{ marginLeft: 'auto', fontSize: 12 }}
+              title="整组启用或停用该分类下的用户插件（核心自动跳过）"
+            >
+              {list.some(it => !it.enabled && !it.isCore) ? '整组启用' : '整组停用'}
+            </button>
+          </div>
           {list.map(it => (
             <div key={it.name} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '6px 8px', borderBottom: '1px solid #eee' }}>
               <div style={{ flex: 1 }}>

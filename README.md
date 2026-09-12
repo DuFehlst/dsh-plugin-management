@@ -18,6 +18,7 @@
 
 ## 变更记录
 
+- **0.5.0**（2026-09-12）— 批量方案：**精简模式 / 全量模式** + 每个分类的**整组启用/停用**（`POST /plugin-management/api/preset|category`）。批量走「一次计划、一次快照、逐个经单条安全链落盘、**任一失败整体回滚**」；纯函数 `planPreset/planCategory` + `applyBatch` 已单测。测试 31/31。
 - **0.4.0**（2026-09-12）— 新增 `/plugin` 斜杠命令（list / enable / disable），复用设置面板的写侧安全链；host `inject` 增加内核 `commands` 服务。测试 25/25。
 - **0.3.0**（2026-09-12）— #3 硬化：写前校验 + 原子写 + 写后复核 + 失败回滚；patch 行编辑修三个真实缺陷（引号 id、多 insert 块只改一处、`disabled: false` 时追加出重复键）；失败文案人话化。测试 19/19。
   - **兼容内核 0.1.5-rc.2**：`dsh.client.inject` 去掉已被内核移除的 `@deepseek-ai/dsh-client-runtime`、`@deepseek-ai/dsh-client-ui-slots`（保留 `dsh-client-connection` / `dsh-client-locale` / `dsh-client-ui-settings`）——不修则整站客户端插件加载失败（`Failed to load plugins`），界面起不来。
